@@ -29,6 +29,8 @@ int main(int argc, char **argv)
 
     // 订阅降落点ENU偏置信息
 
+    //测试用submodule，并更改文件夹名称是否可以成功提交
+
     ros::Subscriber landing_pose_sub = nh.subscribe<geometry_msgs::PoseStamped>("uav1/rtk_land_pos", 10, landingPoseCallback);
 
     // 订阅飞机当前位置信息
