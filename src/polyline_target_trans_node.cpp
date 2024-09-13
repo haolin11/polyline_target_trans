@@ -17,9 +17,11 @@ geometry_msgs::PoseStamped mid_point1;
 geometry_msgs::PoseStamped mid_point2;
 geometry_msgs::PoseStamped uav_current_position;
 
+static int count_P2 = 0;
+
 // geometry_msgs::PoseStamped current_plane_pose;
 // 过渡点的xy距降落点的距离
-double xy2LandPointDistance = 3.5;
+double xy2LandPointDistance = 6.0;
 
 // 标志变量
 // 用于控制是否结束发布第一个过渡点
@@ -69,7 +71,7 @@ int main(int argc, char **argv)
             // 发布第一个降落点作为初始目标位置
             target_pose_pub.publish(mid_point1);
             ROS_INFO_ONCE("Publishing the first mid point.");
-            if (isNear(mid_point1, uav_current_position, 0.3))
+            if (isNear(mid_point1, uav_current_position, 0.4))
             {
                 // std::cout<< "接近第一个点了！"<< std::endl;
                 has_arrived_first_point = true;
@@ -80,9 +82,14 @@ int main(int argc, char **argv)
             // 发布第二个降落点位置信息
             target_pose_pub.publish(mid_point2);
             ROS_INFO_ONCE("Publishing the second mid point.");
-            if (isNear(mid_point2, uav_current_position, 0.3))
+            if (isNear(mid_point2, uav_current_position, 0.4))
             {
-                has_arrived_second_point = true;
+                count_P2++;
+                if (count_P2 == 10)
+                {
+                    has_arrived_second_point = true;
+                }
+                
             }
         }
         else
@@ -112,13 +119,13 @@ void landingPoseCallback(const geometry_msgs::PoseStamped::ConstPtr& msg)
     // mid_point1 = final_landing_pose;
     mid_point1.pose.position.x = mid_point1_xy.x;
     mid_point1.pose.position.y = mid_point1_xy.y;
-    mid_point1.pose.position.z = final_landing_pose.pose.position.z + 1.5;
+    mid_point1.pose.position.z = final_landing_pose.pose.position.z + 3.5;
 
     //第二个点与第一个点保持高度一致
     mid_point2 = final_landing_pose;
     mid_point2.pose.position.x += 0;
     mid_point2.pose.position.y += 0;
-    mid_point2.pose.position.z += 1.5;
+    mid_point2.pose.position.z += 3.5;
 
     // 设置标志，表示已发布第二个过渡点
     // has_arrived_first_point = true;
