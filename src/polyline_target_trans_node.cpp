@@ -15,19 +15,23 @@ struct linePoint {
 geometry_msgs::PoseStamped final_landing_pose;
 geometry_msgs::PoseStamped mid_point1;
 geometry_msgs::PoseStamped mid_point2;
+geometry_msgs::PoseStamped mid_point3;
 geometry_msgs::PoseStamped uav_current_position;
 
 static int count_P2 = 0;
+static int count_P3 = 0;
 
 // geometry_msgs::PoseStamped current_plane_pose;
 // 过渡点的xy距降落点的距离
-double xy2LandPointDistance = 6.0;
+double xy2LandPointDistance = 4.5;
 
 // 标志变量
 // 用于控制是否结束发布第一个过渡点
 bool has_arrived_first_point = false;
 // 用于控制是否结束发布第二个过渡点
 bool has_arrived_second_point = false;
+// 用于控制是否结束发布第三个过渡点
+bool has_arrived_third_point = false;
 
 // 函数声明
 void landingPoseCallback(const geometry_msgs::PoseStamped::ConstPtr& msg);
@@ -92,6 +96,21 @@ int main(int argc, char **argv)
                 
             }
         }
+        else if ( !has_arrived_third_point)
+        {
+            // 发布第二个降落点位置信息
+            target_pose_pub.publish(mid_point3);
+            ROS_INFO_ONCE("Publishing the third mid point.");
+            if (isNear(mid_point3, uav_current_position, 0.4))
+            {
+                count_P3++;
+                if (count_P3 == 10)
+                {
+                    has_arrived_third_point = true;
+                }
+                
+            }
+        }
         else
         {
             // 发布最终降落点位置信息
@@ -119,13 +138,19 @@ void landingPoseCallback(const geometry_msgs::PoseStamped::ConstPtr& msg)
     // mid_point1 = final_landing_pose;
     mid_point1.pose.position.x = mid_point1_xy.x;
     mid_point1.pose.position.y = mid_point1_xy.y;
-    mid_point1.pose.position.z = final_landing_pose.pose.position.z + 3.5;
+    mid_point1.pose.position.z = final_landing_pose.pose.position.z + 3.0;
 
-    //第二个点与第一个点保持高度一致
+    //第二个点与第一个点高度保持一致
     mid_point2 = final_landing_pose;
     mid_point2.pose.position.x += 0;
     mid_point2.pose.position.y += 0;
-    mid_point2.pose.position.z += 3.5;
+    mid_point2.pose.position.z += 3.0;
+
+    //第三个点与第二个点xy保持一致
+    mid_point3 = final_landing_pose;
+    mid_point3.pose.position.x += 0;
+    mid_point3.pose.position.y += 0;
+    mid_point3.pose.position.z += 1.5;
 
     // 设置标志，表示已发布第二个过渡点
     // has_arrived_first_point = true;
